@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+      "sourceMap": true,
+      "strict": true,
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "target": "es5",
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "experimentalDecorators": true,
+      "outDir": "lib",
+      "lib": ["ES2018", "dom"]
+  },
+  "include": [
+      "./src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ]
+}

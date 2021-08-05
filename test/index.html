@@ -1,0 +1,26 @@
+<!doctype html>
+<body>
+<script type="module">
+  import {createWidgetManager} from '/manager.dev.js';
+
+  class FakeState {
+    constructor(state) {
+      this.state = state;
+    }
+
+    async getModelState(modelId) {
+      return this.state[modelId];
+    }
+  }
+
+  const modelId = 'pythree_example_model_007';
+  const state = await (await fetch('./jupyter_threejs_state.json')).json();
+
+  const provider = new FakeState(state);
+  const manager = createWidgetManager(provider);
+
+  manager.render(modelId, document.body);
+</script>
+
+<div class="jupyter-button">Something</div>
+<body>

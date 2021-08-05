@@ -1,0 +1,52 @@
+{
+  "name": "colab-custom-widget-manager",
+  "version": "0.0.1",
+  "description": "Jupyter interactive widgets for Colaboratory",
+  "license": "Apache-2.0",
+  "files": [
+    "lib/**/*.d.ts",
+    "dist/"
+  ],
+  "scripts": {
+    "build": "node build.js",
+    "clean": "rimraf dist && rimraf lib",
+    "compile:test": "tsc -p test/server",
+    "compile": "tsc",
+    "lint": "node node_modules/eslint/bin/eslint.js src --ext .js,.jsx,.ts,.tsx",
+    "prepare": "npm run clean && npm run build",
+    "server": "npm run compile:test && node test/server/lib/server.js",
+    "test:jest": "node node_modules/.bin/jest",
+    "test:karma:dev": "./node_modules/karma/bin/karma start karma.conf.js",
+    "test:karma": "npm run build && ./node_modules/karma/bin/karma start karma.conf.js --single-run",
+    "test": "npm run test:jest && npm run test:karma"
+  },
+  "devDependencies": {
+    "@jupyter-widgets/base": "^5.0.0-alpha.3",
+    "@jupyter-widgets/base-manager": "1.0.0-alpha.2",
+    "@jupyter-widgets/controls": "^4.0.0-alpha.3",
+    "@types/jest": "^26.0.24",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^14.14.10",
+    "@typescript-eslint/eslint-plugin": "^4.29.0",
+    "@typescript-eslint/parser": "^4.29.0",
+    "backbone": "1.4.0",
+    "esbuild": "^0.11.23",
+    "esbuild-jest": "^0.5.0",
+    "eslint": "^7.32.0",
+    "jasmine-core": "^3.8.0",
+    "jest": "^27.0.6",
+    "jest-puppeteer": "^5.0.4",
+    "karma": "^6.3.4",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-esbuild": "^2.2.0",
+    "karma-jasmine": "^4.0.1",
+    "karma-jasmine-html-reporter": "^1.7.0",
+    "karma-typescript": "^5.5.1",
+    "mocha": "^9.0.3",
+    "rimraf": "^2.6.1",
+    "ts-jest": "^27.0.4",
+    "tslint": "^5.8.0",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {}
+}
