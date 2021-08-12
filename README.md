@@ -43,6 +43,8 @@ After a custom widget manager has been registered and a Jupyter Widget is being 
 
 Once a custom widget manager has been registered then a manager will be instantiated when any widgets need to be rendered in the notebook.
 
+The full API details are included in  Colab's [outputframe declaration file](https://github.com/googlecolab/colabtools/blob/07b38dfa2869780ff2128cf7c1ad4414d1b4109c/packages/outputframe/lib/index.d.ts#L154-L210).
+
 # Development
 
 Install and run the development server:
@@ -66,6 +68,8 @@ import ipywidgets as widgets
 widget = widgets.IntSlider(value=10)
 display(widget)
 ```
+
+A full example is https://github.com/googlecolab/colab-cdn-widget-manager/blob/main/notebooks/ipympl.ipynb.
 
 To run all tests:
 
