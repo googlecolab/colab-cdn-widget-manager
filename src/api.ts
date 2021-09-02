@@ -28,8 +28,10 @@
  * ```
  */
 export declare interface WidgetManagerModule {
-  createWidgetManager(state: WidgetEnvironment, arguments?: unknown):
-      IWidgetManager;
+  createWidgetManager(
+    state: WidgetEnvironment,
+    arguments?: unknown
+  ): IWidgetManager;
 }
 
 /**
@@ -39,7 +41,7 @@ export declare interface WidgetEnvironment {
   /**
    * @param modelId The ID of the model for which the model state is desired.
    */
-  getModelState(modelId: string): Promise<ModelState|undefined>;
+  getModelState(modelId: string): Promise<ModelState | undefined>;
 
   /**
    * Open a new comm channel to the kernel.
@@ -53,7 +55,11 @@ export declare interface WidgetEnvironment {
    * @param buffers Any binary data to be sent with the open message.
    * @return The established comm channel.
    */
-   openCommChannel(targetName: string, data?: unknown, buffers?: ArrayBuffer[]): Promise<IComm>;
+  openCommChannel(
+    targetName: string,
+    data?: unknown,
+    buffers?: ArrayBuffer[]
+  ): Promise<IComm>;
 }
 
 export declare interface IWidgetManager {
@@ -99,4 +105,3 @@ export interface Message {
   /** Optional binary buffers transferred with the message. */
   readonly buffers?: ArrayBuffer[];
 }
-

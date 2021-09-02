@@ -20,9 +20,9 @@
  * file, for easier debugging.
  */
 import fs from 'fs';
-import { IncomingMessage, ServerResponse } from 'http';
+import {IncomingMessage, ServerResponse} from 'http';
 import http from 'http';
-import { AddressInfo } from 'net';
+import {AddressInfo} from 'net';
 import path from 'path';
 
 const esbuild = require('esbuild');
@@ -50,7 +50,9 @@ async function serveDev(response: ServerResponse) {
 
 async function serveTest(request: IncomingMessage, response: ServerResponse) {
   const testFolder = path.resolve(path.normalize('./test/'));
-  const toServe = path.resolve(path.normalize(path.join('./test/', request.url!)));
+  const toServe = path.resolve(
+    path.normalize(path.join('./test/', request.url!))
+  );
   if (!toServe.startsWith(testFolder)) {
     throw new Error('not allowed');
   }
@@ -68,22 +70,23 @@ async function serveTest(request: IncomingMessage, response: ServerResponse) {
   response.end(contents);
 }
 
-const server = http.createServer({}, async (request, response) => {
-
-  console.log(request.url);
-  try {
-    if (request.url === '/manager.dev.js') {
-      await serveDev(response);
+const server = http
+  .createServer({}, async (request, response) => {
+    console.log(request.url);
+    try {
+      if (request.url === '/manager.dev.js') {
+        await serveDev(response);
+        return;
+      }
+      await serveTest(request, response);
       return;
+    } catch (error) {
+      response.writeHead(500, 'Error');
+      response.end(String(error));
+      console.error(error);
     }
-    await serveTest(request, response);
-    return;
-  } catch (error) {
-    response.writeHead(500, 'Error');
-    response.end(String(error));
-    console.error(error);
-  }
-}).listen(9897, '127.0.0.1', () => {
-  const address = server.address() as AddressInfo;
-  console.log(`Listening on http://127.0.0.1:${address.port}`);
-});
+  })
+  .listen(9897, '127.0.0.1', () => {
+    const address = server.address() as AddressInfo;
+    console.log(`Listening on http://127.0.0.1:${address.port}`);
+  });

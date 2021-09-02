@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {createWidgetManager} from '../dist/manager.dev.js';
 
 /**
@@ -33,7 +32,7 @@ class FakeState {
       modelName: state.model_name,
       modelModuleVersion: state.model_module_version,
       state: state.state,
-    }
+    };
   }
 }
 
@@ -49,7 +48,9 @@ describe('widget manager', () => {
 
   it('can render a threejs scene', async () => {
     const modelId = 'pythree_example_model_007';
-    const state = await (await fetch('/base/test/jupyter_threejs_state.json')).json();
+    const state = await (
+      await fetch('/base/test/jupyter_threejs_state.json')
+    ).json();
 
     const provider = new FakeState(state);
     const manager = createWidgetManager(provider);
@@ -73,56 +74,60 @@ describe('widget manager', () => {
 
   it('throws for invalid specs', async () => {
     const provider = new FakeState({
-      '123': {
+      123: {
         state: {},
-      }
+      },
     });
     const oldHandler = window.onerror;
     window.onerror = () => {};
     const manager = createWidgetManager(provider);
     await expectAsync(manager.render('123', container)).toBeRejected();
-    await new Promise((resolve)=> setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     window.onerror = oldHandler;
   });
 
   it('has proper lifecycle events', async () => {
     const provider = new FakeState({
-      '123': {
+      123: {
         state: {
-          "_view_module": "custom-widget",
-          "_view_name": "View",
+          _view_module: 'custom-widget',
+          _view_name: 'View',
         },
-        "model_module": "custom-widget",
-        "model_name": "Model",
-      }
+        model_module: 'custom-widget',
+        model_name: 'Model',
+      },
     });
     const manager = createWidgetManager(provider);
     let modelClass;
     let viewClass;
 
-    manager.loader.define('custom-widget', ['@jupyter-widgets/base'], (base) => {
-      class Model extends base.DOMWidgetModel {
-        constructor(...args) {
-          super(...args);
+    manager.loader.define(
+      'custom-widget',
+      ['@jupyter-widgets/base'],
+      (base) => {
+        class Model extends base.DOMWidgetModel {
+          constructor(...args) {
+            super(...args);
+          }
         }
-      }
-      class View extends base.DOMWidgetView {
-        constructor(...args) {
-          super(...args);
-          this.hasBeenDisplayed = false;
-          this.displayed.then(() => {
-            this.hasBeenDisplayed = true;
-          });
+        class View extends base.DOMWidgetView {
+          constructor(...args) {
+            super(...args);
+            this.hasBeenDisplayed = false;
+            this.displayed.then(() => {
+              this.hasBeenDisplayed = true;
+            });
+          }
         }
-      }
-      modelClass = Model;
-      viewClass = View;
+        modelClass = Model;
+        viewClass = View;
 
-      return {
-        Model,
-        View,
+        return {
+          Model,
+          View,
+        };
       }
-    });
+    );
 
     container.remove();
 

@@ -35,13 +35,20 @@ export class Loader {
       const url = this.resolveModule(moduleName, moduleVersion);
       const script = await (await fetch(url.toString())).text();
       const fn = new Function('define', script);
-      let module: Module|undefined;
-      const define = (first: string|string[], second: string[]|(()=>unknown)|unknown, third?: (()=>unknown)|unknown) => {
+      let module: Module | undefined;
+      const define = (
+        first: string | string[],
+        second: string[] | (() => unknown) | unknown,
+        third?: (() => unknown) | unknown
+      ) => {
         if (typeof first === 'string') {
           module = this.define(first, second as string[], third);
-        }
-        else {
-          module = this.define(moduleName, first as string[], second as (()=>unknown)|unknown);
+        } else {
+          module = this.define(
+            moduleName,
+            first as string[],
+            second as (() => unknown) | unknown
+          );
         }
       };
       fn.call({define}, define);
@@ -50,9 +57,11 @@ export class Loader {
     });
     // Serialize script loading to keep only one module loading at a time.
     /* eslint @typescript-eslint/no-empty-function: "off" */
-    this.loadQueue = loaded.then(() => {}).catch(() => {
-      // ignore errors for later loads.
-    });
+    this.loadQueue = loaded
+      .then(() => {})
+      .catch(() => {
+        // ignore errors for later loads.
+      });
 
     definition = {
       loaded,
@@ -78,22 +87,32 @@ export class Loader {
     }
     if (!module.exports) {
       module.exports = (async () => {
-        const requirements = await Promise.all(module.dependencies.map((dependency) => {
-          const definition = this.definitions.get(dependency);
-          if (!definition) {
-            throw new Error(`Unknown dependency ${dependency}`);
-          }
-          return this.loadModule(dependency, definition);
-        }));
+        const requirements = await Promise.all(
+          module.dependencies.map((dependency) => {
+            const definition = this.definitions.get(dependency);
+            if (!definition) {
+              throw new Error(`Unknown dependency ${dependency}`);
+            }
+            return this.loadModule(dependency, definition);
+          })
+        );
         return module.factory.apply(window, requirements);
       })();
     }
     return module.exports;
   }
 
-  define(moduleId: string, dependencies: string[], definition: () => unknown): Module;
+  define(
+    moduleId: string,
+    dependencies: string[],
+    definition: () => unknown
+  ): Module;
   define(moduleId: string, dependencies: string[], definition: unknown): Module;
-  define(moduleId: string, dependencies: string[], factory?: (()=>unknown)|unknown): Module {
+  define(
+    moduleId: string,
+    dependencies: string[],
+    factory?: (() => unknown) | unknown
+  ): Module {
     if (!(factory instanceof Function)) {
       factory = () => factory;
     }
@@ -128,7 +147,9 @@ function getHostedModuleUrl(moduleName: string, moduleVersion?: string): URL {
   if (version.startsWith('^')) {
     version = version.substr(1);
   }
-  return new URL(`https://cdn.jsdelivr.net/npm/${packageName}@${version}/${filename}`);
+  return new URL(
+    `https://cdn.jsdelivr.net/npm/${packageName}@${version}/${filename}`
+  );
 }
 
 interface Definition {
