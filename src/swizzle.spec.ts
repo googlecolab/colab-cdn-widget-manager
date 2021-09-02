@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { expect } from '@jest/globals';
 import {swizzle} from './swizzle';
+import {expect} from '@jest/globals';
 import * as Backbone from 'backbone';
 
 class BaseES6 {
@@ -39,7 +38,7 @@ describe('swizzle', () => {
   describe('handles subclassing ES6 classes', () => {
     class Subclass extends swizzle(BaseES6) {
       static staticProperty = 'the derived static';
-      getValue () {
+      getValue() {
         return 'the derived class';
       }
     }
@@ -66,13 +65,17 @@ describe('swizzle', () => {
   });
 
   describe('constructors can be overridden backbone.extend', () => {
-    const Subclass = Backbone.Model.extend.call(swizzle(BaseES6), {
-      getValue: function () {
-        return 'the derived class';
+    const Subclass = Backbone.Model.extend.call(
+      swizzle(BaseES6),
+      {
+        getValue: function () {
+          return 'the derived class';
+        },
       },
-    }, {
-      staticProperty: 'the derived static',
-    });
+      {
+        staticProperty: 'the derived static',
+      }
+    );
     const instance = new Subclass('constructor param');
     it('passes constructor params', () => {
       expect(instance.constructorParam).toBe('constructor param');

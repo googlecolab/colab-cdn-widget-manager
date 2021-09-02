@@ -14,17 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { WidgetModel, WidgetView, IClassicComm } from '@jupyter-widgets/base';
+import {Loader} from './amd';
+import {IComm, IWidgetManager, WidgetEnvironment} from './api';
+import {swizzle} from './swizzle';
+import {WidgetModel, WidgetView, IClassicComm} from '@jupyter-widgets/base';
 import * as base from '@jupyter-widgets/base';
+import {ManagerBase} from '@jupyter-widgets/base-manager';
 import * as controls from '@jupyter-widgets/controls';
-import { ManagerBase } from '@jupyter-widgets/base-manager';
-import { JSONObject } from '@lumino/coreutils';
-import { Widget } from '@lumino/widgets';
-
-import { Loader } from './amd';
-import { IComm, IWidgetManager, WidgetEnvironment } from './api';
-import { swizzle } from './swizzle';
+import {JSONObject} from '@lumino/coreutils';
+import {Widget} from '@lumino/widgets';
 
 export class Manager extends ManagerBase implements IWidgetManager {
   private readonly models = new Map<string, Promise<WidgetModel>>();
@@ -38,13 +36,17 @@ export class Manager extends ManagerBase implements IWidgetManager {
     // Backbone's extend cannot iterate static properties on ES6 classes and
     // misses propagating them when subclassing.
     const backboneExtend = base.WidgetModel.extend;
-    const extend = function (this: object, proto: object, statics: unknown): any {
+    const extend = function (
+      this: object,
+      proto: object,
+      statics: unknown
+    ): any {
       const result = backboneExtend.call(this, proto, statics);
       // Use prototype inheritance of the classes so the statics are correctly
       // inherited.
       Object.setPrototypeOf(result, this);
       return result;
-    }
+    };
     base.WidgetModel.extend = controls.ButtonModel.extend = extend;
 
     this.loader.define('@jupyter-widgets/base', [], () => {
@@ -78,20 +80,40 @@ export class Manager extends ManagerBase implements IWidgetManager {
     });
   }
 
-  protected async loadClass(className: string, moduleName: string, moduleVersion: string): Promise<typeof WidgetModel | typeof WidgetView> {
+  protected async loadClass(
+    className: string,
+    moduleName: string,
+    moduleVersion: string
+  ): Promise<typeof WidgetModel | typeof WidgetView> {
     const exports = await this.loader.load(moduleName, moduleVersion);
-    return (exports as {[key: string]:(typeof WidgetModel| typeof WidgetView)}) [className];
+    return (exports as {[key: string]: typeof WidgetModel | typeof WidgetView})[
+      className
+    ];
   }
 
-  protected async _create_comm(comm_target_name: string, model_id?: string, data?: JSONObject, metadata?: JSONObject, buffers?: ArrayBuffer[] | ArrayBufferView[]): Promise<IClassicComm> {
+  protected async _create_comm(
+    comm_target_name: string,
+    model_id?: string,
+    data?: JSONObject,
+    metadata?: JSONObject,
+    buffers?: ArrayBuffer[] | ArrayBufferView[]
+  ): Promise<IClassicComm> {
     const sendBuffers = buffers?.map((buffer) => {
       if (ArrayBuffer.isView(buffer)) {
-        return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+        return new Uint8Array(
+          buffer.buffer,
+          buffer.byteOffset,
+          buffer.byteLength
+        );
       }
       return buffer;
     });
 
-    const comm = await this.environment.openCommChannel(comm_target_name, data, sendBuffers);
+    const comm = await this.environment.openCommChannel(
+      comm_target_name,
+      data,
+      sendBuffers
+    );
     return new ClassicComm(model_id || '', comm);
   }
 
@@ -115,13 +137,16 @@ export class Manager extends ManagerBase implements IWidgetManager {
         comm = new ClassicComm(modelId, state.comm);
       }
 
-      const model = await this.new_model({
-        model_name: state.modelName,
-        model_module: state.modelModule,
-        model_module_version: state.modelModuleVersion,
-        model_id: modelId,
-        comm,
-      }, state.state);
+      const model = await this.new_model(
+        {
+          model_name: state.modelName,
+          model_module: state.modelModule,
+          model_module_version: state.modelModuleVersion,
+          model_id: modelId,
+          comm,
+        },
+        state.state
+      );
       return model;
     })();
     this.models.set(modelId, modelPromise);
@@ -149,18 +174,32 @@ class ClassicComm implements IClassicComm {
     return '';
   }
 
-  open(data: any, callbacks: any, metadata?: any, buffers?: ArrayBuffer[] | ArrayBufferView[]): string {
+  open(
+    data: any,
+    callbacks: any,
+    metadata?: any,
+    buffers?: ArrayBuffer[] | ArrayBufferView[]
+  ): string {
     // Comm channels should be opened through Manager._create_comm.
     throw new Error('Method not implemented.');
   }
 
   /* eslint @typescript-eslint/no-explicit-any: "off" */
-  send(data: unknown, callbacks: any, metadata?: unknown, buffers?: ArrayBuffer[] | ArrayBufferView[]): string {
+  send(
+    data: unknown,
+    callbacks: any,
+    metadata?: unknown,
+    buffers?: ArrayBuffer[] | ArrayBufferView[]
+  ): string {
     let opts = undefined;
     if (buffers) {
       const sendBuffers = buffers.map((buffer) => {
         if (ArrayBuffer.isView(buffer)) {
-          return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+          return new Uint8Array(
+            buffer.buffer,
+            buffer.byteOffset,
+            buffer.byteLength
+          );
         }
         return buffer;
       });
@@ -171,20 +210,25 @@ class ClassicComm implements IClassicComm {
         callbacks.iopub.status({
           content: {
             execution_state: 'idle',
-          }
+          },
         });
       }
     });
     return '';
   }
-  close(data?: unknown, callbacks?: unknown, metadata?: unknown, buffers?: ArrayBuffer[] | ArrayBufferView[]): string {
+  close(
+    data?: unknown,
+    callbacks?: unknown,
+    metadata?: unknown,
+    buffers?: ArrayBuffer[] | ArrayBufferView[]
+  ): string {
     // Currently does not support data in the close.
     this.comm.close();
     return '';
   }
 
   on_msg(callback: (x: unknown) => void) {
-    (async() => {
+    (async () => {
       for await (const message of this.comm.messages) {
         let buffers;
         if (message.buffers) {
@@ -198,7 +242,7 @@ class ClassicComm implements IClassicComm {
               comm_id: this.id,
               data: message.data,
             },
-            buffers: buffers
+            buffers: buffers,
           });
         } catch (error) {
           console.error(error);
@@ -208,10 +252,11 @@ class ClassicComm implements IClassicComm {
   }
 
   on_close(callback: (x: unknown) => void): void {
-    (async() => {
+    (async () => {
       // Wait for all messages to complete.
       /* eslint no-empty: "off", @typescript-eslint/no-unused-vars: "off" */
-      for await (const message of this.comm.messages) {}
+      for await (const message of this.comm.messages) {
+      }
       callback(undefined);
     })();
   }
@@ -251,7 +296,7 @@ class LuminoLifecycleAdapter extends HTMLElement {
         type: 'after-detach',
         isConflatable: false,
         conflate: () => false,
-      })
+      });
     }
   }
 }
