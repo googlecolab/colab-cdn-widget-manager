@@ -18,12 +18,13 @@
 import { WidgetModel, WidgetView, IClassicComm } from '@jupyter-widgets/base';
 import * as base from '@jupyter-widgets/base';
 import * as controls from '@jupyter-widgets/controls';
-import {ManagerBase} from '@jupyter-widgets/base-manager';
+import { ManagerBase } from '@jupyter-widgets/base-manager';
 import { JSONObject } from '@lumino/coreutils';
-import {Loader} from './amd';
-import { IComm, IWidgetManager, WidgetEnvironment } from './api';
-import {swizzle} from './swizzle';
 import { Widget } from '@lumino/widgets';
+
+import { Loader } from './amd';
+import { IComm, IWidgetManager, WidgetEnvironment } from './api';
+import { swizzle } from './swizzle';
 
 export class Manager extends ManagerBase implements IWidgetManager {
   private readonly models = new Map<string, Promise<WidgetModel>>();
