@@ -23,6 +23,7 @@ import { JSONObject } from '@lumino/coreutils';
 import {Loader} from './amd';
 import { IComm, IWidgetManager, WidgetEnvironment } from './api';
 import {swizzle} from './swizzle';
+import { Widget } from '@lumino/widgets';
 
 export class Manager extends ManagerBase implements IWidgetManager {
   private readonly models = new Map<string, Promise<WidgetModel>>();
@@ -135,13 +136,9 @@ export class Manager extends ManagerBase implements IWidgetManager {
       conflate: () => false,
     });
 
-    container.appendChild(view.el);
-
-    view.luminoWidget.processMessage({
-      type: 'after-attach',
-      isConflatable: false,
-      conflate: () => false,
-    });
+    const lifecycleAdapter = new LuminoLifecycleAdapter(view.luminoWidget);
+    lifecycleAdapter.appendChild(view.el);
+    container.appendChild(lifecycleAdapter);
   }
 }
 
@@ -221,4 +218,44 @@ class ClassicComm implements IClassicComm {
   get comm_id() {
     return this.id;
   }
+}
+
+/**
+ * Custom element to provide Lumino lifecycle events driven by native DOM
+ * events.
+ */
+class LuminoLifecycleAdapter extends HTMLElement {
+  constructor(private readonly widget?: Widget) {
+    super();
+  }
+  connectedCallback() {
+    if (this.widget) {
+      this.widget.processMessage({
+        type: 'after-attach',
+        isConflatable: false,
+        conflate: () => false,
+      });
+    }
+  }
+  disconnectedCallback() {
+    if (this.widget) {
+      // We don't have a native event for before-detach, so just fire before
+      // the after-detach.
+      this.widget.processMessage({
+        type: 'before-detach',
+        isConflatable: false,
+        conflate: () => false,
+      });
+      this.widget.processMessage({
+        type: 'after-detach',
+        isConflatable: false,
+        conflate: () => false,
+      })
+    }
+  }
+}
+try {
+  window.customElements.define('colab-lumino-adapter', LuminoLifecycleAdapter);
+} catch (error: unknown) {
+  // May have already been defined.
 }

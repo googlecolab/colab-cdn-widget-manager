@@ -84,4 +84,56 @@ describe('widget manager', () => {
     await new Promise((resolve)=> setTimeout(resolve, 100));
     window.onerror = oldHandler;
   });
+
+  it('has proper lifecycle events', async () => {
+    const provider = new FakeState({
+      '123': {
+        state: {
+          "_view_module": "custom-widget",
+          "_view_name": "View",
+        },
+        "model_module": "custom-widget",
+        "model_name": "Model",
+      }
+    });
+    const manager = createWidgetManager(provider);
+    let modelClass;
+    let viewClass;
+
+    manager.loader.define('custom-widget', ['@jupyter-widgets/base'], (base) => {
+      class Model extends base.DOMWidgetModel {
+        constructor(...args) {
+          super(...args);
+        }
+      }
+      class View extends base.DOMWidgetView {
+        constructor(...args) {
+          super(...args);
+          this.hasBeenDisplayed = false;
+          this.displayed.then(() => {
+            this.hasBeenDisplayed = true;
+          });
+        }
+      }
+      modelClass = Model;
+      viewClass = View;
+
+      return {
+        Model,
+        View,
+      }
+    });
+
+    container.remove();
+
+    await manager.render('123', container);
+    const model = await manager.get_model('123');
+    expect(model).toBeInstanceOf(modelClass);
+    const view = await Object.values(model.views)[0];
+    expect(view).toBeInstanceOf(viewClass);
+    expect(view.hasBeenDisplayed).toBe(false);
+    document.body.appendChild(container);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(view.hasBeenDisplayed).toBe(true);
+  });
 });
