@@ -2,3 +2,10 @@
 @import '@jupyter-widgets/controls/css/widgets.css';
 
 /* Any additional CSS styles needed go here */
+
+:root {
+  --jp-widgets-color: var(--colab-primary-text-color);
+  --jp-layout-color2: var(--colab-secondary-surface-color);
+  --jp-ui-font-color1: var(--colab-primary-text-color);
+  --jp-widgets-input-background-color: var(--colab-secondary-surface-color);
+}
