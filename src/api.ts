@@ -60,6 +60,9 @@ export declare interface WidgetEnvironment {
     data?: unknown,
     buffers?: ArrayBuffer[]
   ): Promise<IComm>;
+
+  /** Renders a standard Jupyter output item into destination.  */
+  renderOutput(outputItem: unknown, destination: Element): Promise<void>;
 }
 
 export declare interface IWidgetManager {

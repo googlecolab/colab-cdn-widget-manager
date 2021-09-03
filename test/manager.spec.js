@@ -34,6 +34,12 @@ class FakeState {
       state: state.state,
     };
   }
+
+  async renderOutput(output, element) {
+    if (output.data['text/html']) {
+      element.innerHTML = output.data['text/html'];
+    }
+  }
 }
 
 describe('widget manager', () => {
@@ -140,5 +146,17 @@ describe('widget manager', () => {
     document.body.appendChild(container);
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(view.hasBeenDisplayed).toBe(true);
+  });
+
+  it('supports output widgets', async () => {
+    const modelId = '99837b7c37654c8c8f35cad63aaad130';
+    const state = await (await fetch('/base/test/output_state.json')).json();
+
+    const provider = new FakeState(state);
+    const manager = createWidgetManager(provider);
+
+    await manager.render(modelId, container);
+    const marquee = container.querySelector('marquee');
+    expect(marquee).toBeInstanceOf(HTMLElement);
   });
 });

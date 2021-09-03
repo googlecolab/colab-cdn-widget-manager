@@ -16,6 +16,7 @@
  */
 import {Loader} from './amd';
 import {IComm, IWidgetManager, WidgetEnvironment} from './api';
+import * as outputs from './outputs';
 import {swizzle} from './swizzle';
 import {WidgetModel, WidgetView, IClassicComm} from '@jupyter-widgets/base';
 import * as base from '@jupyter-widgets/base';
@@ -78,6 +79,8 @@ export class Manager extends ManagerBase implements IWidgetManager {
       }
       return module;
     });
+
+    this.loader.define('@jupyter-widgets/output', [], () => outputs);
   }
 
   protected async loadClass(
@@ -165,6 +168,10 @@ export class Manager extends ManagerBase implements IWidgetManager {
     const lifecycleAdapter = new LuminoLifecycleAdapter(view.luminoWidget);
     lifecycleAdapter.appendChild(view.el);
     container.appendChild(lifecycleAdapter);
+  }
+
+  renderOutput(outputItem: unknown, destination: Element): Promise<void> {
+    return this.environment.renderOutput(outputItem, destination);
   }
 }
 
