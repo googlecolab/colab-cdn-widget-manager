@@ -69,7 +69,7 @@ widget = widgets.IntSlider(value=10)
 display(widget)
 ```
 
-A full example is https://github.com/googlecolab/colab-cdn-widget-manager/blob/main/notebooks/ipympl.ipynb.
+The development server will automatically rebuild the sources- no need to restart the server after local modifications. A full example is https://github.com/googlecolab/colab-cdn-widget-manager/blob/main/notebooks/ipympl.ipynb.
 
 To run all tests:
 
