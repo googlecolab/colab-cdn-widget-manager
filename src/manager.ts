@@ -212,6 +212,10 @@ class ClassicComm implements IClassicComm {
       });
       opts = {buffers: sendBuffers};
     }
+    // Round-trip through JSON to drop non-transferrable properties. These will
+    // throw errors when sent via a message channel, vs JSON.stringify which
+    // will just skip.
+    data = JSON.parse(JSON.stringify(data));
     this.comm.send(data, opts).then(() => {
       if (callbacks && callbacks.iopub && callbacks.iopub.status) {
         callbacks.iopub.status({
