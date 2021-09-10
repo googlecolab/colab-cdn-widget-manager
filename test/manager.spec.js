@@ -21,8 +21,9 @@ import {createWidgetManager} from '../dist/manager.dev.js';
  * format.
  */
 class FakeState {
-  constructor(state) {
+  constructor(state, comm) {
     this.state = state;
+    this.comm = comm;
   }
 
   async getModelState(modelId) {
@@ -32,6 +33,7 @@ class FakeState {
       modelName: state.model_name,
       modelModuleVersion: state.model_module_version,
       state: state.state,
+      comm: this.comm,
     };
   }
 
@@ -158,5 +160,64 @@ describe('widget manager', () => {
     await manager.render(modelId, container);
     const marquee = container.querySelector('marquee');
     expect(marquee).toBeInstanceOf(HTMLElement);
+  });
+
+  it('omits non-transferrables', async () => {
+    const provider = new FakeState(
+      {
+        123: {
+          state: {
+            _view_module: 'custom-widget',
+            _view_name: 'View',
+          },
+          model_module: 'custom-widget',
+          model_name: 'Model',
+        },
+      },
+      {
+        send: async (data) => {
+          const channel = new MessageChannel();
+          channel.port1.postMessage(data);
+        },
+      }
+    );
+    const manager = createWidgetManager(provider);
+    let modelClass;
+    let viewClass;
+
+    manager.loader.define(
+      'custom-widget',
+      ['@jupyter-widgets/base'],
+      (base) => {
+        class Model extends base.DOMWidgetModel {
+          constructor(...args) {
+            super(...args);
+          }
+        }
+        class View extends base.DOMWidgetView {
+          constructor(...args) {
+            super(...args);
+            this.hasBeenDisplayed = false;
+            this.displayed.then(() => {
+              this.hasBeenDisplayed = true;
+            });
+          }
+        }
+        modelClass = Model;
+        viewClass = View;
+
+        return {
+          Model,
+          View,
+        };
+      }
+    );
+    await manager.render('123', container);
+    const model = await manager.get_model('123');
+    expect(() => {
+      model.send({
+        nonTransferrable: () => {},
+      });
+    }).not.toThrow();
   });
 });
