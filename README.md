@@ -59,9 +59,8 @@ Then from a notebook running in Google Colab:
 from IPython.display import Javascript
 
 # Specify the custom widget manager running locally
-display(Javascript('''
-  google.colab.widgets.installCustomManager('http://127.0.0.1:9897/manager.dev.js');
-'''))
+from google.colab.output import _widgets
+_widgets._install_custom_widget_manager('http://127.0.0.1:9897/manager.dev.js')
 
 import ipywidgets as widgets
 
