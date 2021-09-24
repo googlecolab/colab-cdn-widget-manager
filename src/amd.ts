@@ -33,7 +33,7 @@ export class Loader {
       this.register();
 
       const url = this.resolveModule(moduleName, moduleVersion);
-      const script = await (await fetch(url.toString())).text();
+      const script = await (await fetch(url.toString())).text() + `\n//@ sourceURL=${url}`;
       const fn = new Function('define', script);
       let module: Module | undefined;
       const define = (

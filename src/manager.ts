@@ -18,7 +18,7 @@ import {Loader} from './amd';
 import {IComm, IWidgetManager, WidgetEnvironment} from './api';
 import * as outputs from './outputs';
 import {swizzle} from './swizzle';
-import {WidgetModel, WidgetView, IClassicComm} from '@jupyter-widgets/base';
+import {WidgetModel, WidgetView, IClassicComm, DOMWidgetView} from '@jupyter-widgets/base';
 import * as base from '@jupyter-widgets/base';
 import {ManagerBase} from '@jupyter-widgets/base-manager';
 import * as controls from '@jupyter-widgets/controls';
@@ -49,6 +49,12 @@ export class Manager extends ManagerBase implements IWidgetManager {
       return result;
     };
     base.WidgetModel.extend = controls.ButtonModel.extend = extend;
+
+    Object.defineProperty(DOMWidgetView.prototype, 'pWidget', {
+      get: function () {
+        return this.luminoWidget;
+      }
+    });
 
     this.loader.define('@jupyter-widgets/base', [], () => {
       const module: {[key: string]: unknown} = {};
@@ -241,7 +247,7 @@ class ClassicComm implements IClassicComm {
   on_msg(callback: (x: unknown) => void) {
     (async () => {
       for await (const message of this.comm.messages) {
-        let buffers;
+        let buffers: Uint8Array[] = [];
         if (message.buffers) {
           // The comm callback is typed as ArrayBuffer|ArrayBufferView but
           // some code (pythreejs) require ArrayBufferViews.
