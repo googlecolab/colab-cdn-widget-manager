@@ -9,3 +9,7 @@
   --jp-ui-font-color1: var(--colab-primary-text-color);
   --jp-widgets-input-background-color: var(--colab-secondary-surface-color);
 }
+
+colab-lumino-adapter {
+  display: block;
+}
