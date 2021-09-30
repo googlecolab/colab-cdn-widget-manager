@@ -23,6 +23,10 @@ import {
   WidgetView,
   IClassicComm,
   DOMWidgetView,
+  remove_buffers,
+  put_buffers,
+  BufferJSON,
+  Dict,
 } from '@jupyter-widgets/base';
 import * as base from '@jupyter-widgets/base';
 import {ManagerBase} from '@jupyter-widgets/base-manager';
@@ -150,6 +154,16 @@ export class Manager extends ManagerBase implements IWidgetManager {
       if (!state) {
         throw new Error('not found');
       }
+
+      // Round-trip the state through Jupyter's remove_buffers/put_buffers to
+      // normalize the buffer format.
+      const serializedState = remove_buffers(state.state as BufferJSON);
+      put_buffers(
+        state.state as Dict<BufferJSON>,
+        serializedState.buffer_paths,
+        serializedState.buffers
+      );
+
       let comm = undefined;
       if (state.comm) {
         comm = new ClassicComm(modelId, state.comm);
@@ -255,6 +269,9 @@ class ClassicComm implements IClassicComm {
 
   on_msg(callback: (x: unknown) => void) {
     (async () => {
+      if (!this.comm) {
+        return;
+      }
       for await (const message of this.comm.messages) {
         let buffers: Uint8Array[] = [];
         if (message.buffers) {
@@ -278,6 +295,9 @@ class ClassicComm implements IClassicComm {
   }
 
   on_close(callback: (x: unknown) => void): void {
+    if (!this.comm) {
+      return;
+    }
     (async () => {
       // Wait for all messages to complete.
       /* eslint no-empty: "off", @typescript-eslint/no-unused-vars: "off" */

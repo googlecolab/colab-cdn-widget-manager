@@ -220,4 +220,48 @@ describe('widget manager', () => {
       });
     }).not.toThrow();
   });
+
+  it('normalizes buffers', async () => {
+    const provider = new FakeState({
+      123: {
+        state: {
+          _view_module: 'custom-widget',
+          _view_name: 'View',
+          my_data: new ArrayBuffer(100),
+        },
+        model_module: 'custom-widget',
+        model_name: 'Model',
+      },
+    });
+    const manager = createWidgetManager(provider);
+
+    let constructedState;
+    manager.loader.define(
+      'custom-widget',
+      ['@jupyter-widgets/base'],
+      (base) => {
+        class Model extends base.DOMWidgetModel {
+          constructor(state, options) {
+            super(state, options);
+            constructedState = state;
+          }
+        }
+        class View extends base.DOMWidgetView {
+          constructor(...args) {
+            super(...args);
+          }
+        }
+        return {
+          Model,
+          View,
+        };
+      }
+    );
+
+    await manager.render('123', container);
+    expect(constructedState.my_data).toBeInstanceOf(DataView);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    container.remove();
+  });
 });
