@@ -62,6 +62,9 @@ async function serveTest(request: IncomingMessage, response: ServerResponse) {
     case '.html':
       contentType = 'text/html';
       break;
+    case '.js':
+      contentType = 'text/javascript';
+      break;
   }
   response.writeHead(200, {
     'Content-Type': contentType,
