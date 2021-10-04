@@ -31,6 +31,7 @@ import {
 import * as base from '@jupyter-widgets/base';
 import {ManagerBase} from '@jupyter-widgets/base-manager';
 import * as controls from '@jupyter-widgets/controls';
+import * as services from '@jupyterlab/services';
 import {JSONObject} from '@lumino/coreutils';
 import {Widget} from '@lumino/widgets';
 
@@ -201,6 +202,29 @@ export class Manager extends ManagerBase implements IWidgetManager {
 
   renderOutput(outputItem: unknown, destination: Element): Promise<void> {
     return this.environment.renderOutput(outputItem, destination);
+  }
+
+  async commChannelOpened(
+    id: string,
+    comm: IComm,
+    data?: unknown,
+    buffers?: ArrayBuffer[]
+  ) {
+    if (!data) {
+      return;
+    }
+    const classicComm = new ClassicComm(id, comm);
+    await this.handle_comm_open(classicComm, {
+      header: {} as services.KernelMessage.IHeader<'comm_open'>,
+      metadata: {version: base.PROTOCOL_VERSION},
+      parent_header: {},
+      channel: 'iopub',
+      content: {
+        comm_id: id,
+        target_name: 'jupyter.widget',
+        data: data as JSONObject,
+      },
+    });
   }
 }
 
