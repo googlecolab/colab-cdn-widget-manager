@@ -70,6 +70,16 @@ export declare interface IWidgetManager {
    * Render the model specified by modelId into the container element.
    */
   render(modelId: string, container: Element): Promise<void>;
+
+  /**
+   * Invoked when a comm channel has been opened.
+   */
+  commChannelOpened?(
+    id: string,
+    comm: IComm,
+    data?: unknown,
+    buffers?: ArrayBuffer[]
+  ): void;
 }
 
 export declare interface ModelState {
