@@ -33,6 +33,7 @@ import {ManagerBase} from '@jupyter-widgets/base-manager';
 import * as controls from '@jupyter-widgets/controls';
 import * as services from '@jupyterlab/services';
 import {JSONObject} from '@lumino/coreutils';
+import {Message} from '@lumino/messaging';
 import {Widget} from '@lumino/widgets';
 
 export class Manager extends ManagerBase implements IWidgetManager {
@@ -67,6 +68,20 @@ export class Manager extends ManagerBase implements IWidgetManager {
         get: function () {
           return this.luminoWidget;
         },
+      });
+    }
+
+    // https://github.com/googlecolab/colab-cdn-widget-manager/issues/19
+    // Add processPhosphorMessage for better compat with jupyter-widgets 4.0.0.
+    if (
+      !Object.getOwnPropertyDescriptor(
+        DOMWidgetView.prototype,
+        'processPhosphorMessage'
+      )
+    ) {
+      Object.defineProperty(DOMWidgetView.prototype, 'processPhosphorMessage', {
+        value: function () {},
+        writable: true,
       });
     }
 
@@ -189,7 +204,7 @@ export class Manager extends ManagerBase implements IWidgetManager {
   async render(modelId: string, container: HTMLElement): Promise<void> {
     const model = (await this.get_model(modelId)) as WidgetModel;
     const view = await this.create_view(model);
-    view.luminoWidget.processMessage({
+    dispatchLuminoMessage(view.luminoWidget, {
       type: 'before-attach',
       isConflatable: false,
       conflate: () => false,
@@ -346,7 +361,7 @@ class LuminoLifecycleAdapter extends HTMLElement {
   }
   connectedCallback() {
     if (this.widget) {
-      this.widget.processMessage({
+      dispatchLuminoMessage(this.widget, {
         type: 'after-attach',
         isConflatable: false,
         conflate: () => false,
@@ -357,12 +372,12 @@ class LuminoLifecycleAdapter extends HTMLElement {
     if (this.widget) {
       // We don't have a native event for before-detach, so just fire before
       // the after-detach.
-      this.widget.processMessage({
+      dispatchLuminoMessage(this.widget, {
         type: 'before-detach',
         isConflatable: false,
         conflate: () => false,
       });
-      this.widget.processMessage({
+      dispatchLuminoMessage(this.widget, {
         type: 'after-detach',
         isConflatable: false,
         conflate: () => false,
@@ -370,6 +385,23 @@ class LuminoLifecycleAdapter extends HTMLElement {
     }
   }
 }
+
+function dispatchLuminoMessage(widget: Widget, message: Message) {
+  widget.processMessage(message);
+  const phosphorWidget = widget as MaybePhosphorWidget;
+  if (phosphorWidget._view?.processPhosphorMessage) {
+    phosphorWidget._view.processPhosphorMessage(message);
+  }
+}
+
+declare interface MaybePhosphorWidget {
+  _view?: MaybePhosphorView;
+}
+
+declare interface MaybePhosphorView {
+  processPhosphorMessage?(message: Message): void;
+}
+
 try {
   window.customElements.define('colab-lumino-adapter', LuminoLifecycleAdapter);
 } catch (error: unknown) {

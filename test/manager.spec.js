@@ -264,4 +264,52 @@ describe('widget manager', () => {
 
     container.remove();
   });
+
+  it('supports processPhosphorMessage', async () => {
+    const provider = new FakeState({
+      123: {
+        state: {
+          _view_module: 'custom-widget',
+          _view_name: 'View',
+        },
+        model_module: 'custom-widget',
+        model_name: 'Model',
+      },
+    });
+    const manager = createWidgetManager(provider);
+    let modelClass;
+    let viewClass;
+    let processPhosphorMessageCalled = false;
+
+    manager.loader.define(
+      'custom-widget',
+      ['@jupyter-widgets/base'],
+      (base) => {
+        class Model extends base.DOMWidgetModel {
+          constructor(...args) {
+            super(...args);
+          }
+        }
+        class View extends base.DOMWidgetView {
+          constructor(...args) {
+            super(...args);
+          }
+          processPhosphorMessage() {
+            super.processPhosphorMessage();
+            processPhosphorMessageCalled = true;
+          }
+        }
+        modelClass = Model;
+        viewClass = View;
+
+        return {
+          Model,
+          View,
+        };
+      }
+    );
+
+    await manager.render('123', container);
+    expect(processPhosphorMessageCalled).toBeTrue();
+  });
 });
