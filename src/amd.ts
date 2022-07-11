@@ -91,6 +91,14 @@ export class Loader {
         const requirements = await Promise.all(
           module.dependencies.map((dependency) => {
             const definition = this.definitions.get(dependency);
+            // Support requirejs magic modules:
+            // https://github.com/requirejs/requirejs/wiki/Differences-between-the-simplified-CommonJS-wrapper-and-standard-AMD-define#magic
+            if (dependency === 'module') {
+              return {
+                id: module.id,
+                url: this.resolveModule(module.id),
+              };
+            }
             if (!definition) {
               throw new Error(`Unknown dependency ${dependency}`);
             }
@@ -121,6 +129,7 @@ export class Loader {
     const module = {
       factory: factory as () => unknown,
       dependencies,
+      id: moduleId,
     };
     if (!definition) {
       this.definitions.set(moduleId, {
@@ -158,6 +167,7 @@ interface Definition {
 }
 
 interface Module {
+  id: string;
   dependencies: string[];
   factory: (...args: unknown[]) => unknown;
   exports?: Promise<unknown>;
