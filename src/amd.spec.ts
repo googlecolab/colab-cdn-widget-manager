@@ -31,3 +31,11 @@ test('getHostedModuleUrl', () => {
       .pathname
   ).toBe('/npm/@jupyter-widgets/base@4.0.0/css/index.css');
 });
+
+test('requirejs magic modules', async () => {
+  const loader = new Loader();
+  loader.define('foo', ['module'], (module) => {
+    return `module: ${module.id}`;
+  });
+  expect(await loader.load('foo')).toBe('module: foo');
+});
