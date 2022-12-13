@@ -229,6 +229,11 @@ export class Manager extends ManagerBase implements IWidgetManager {
       return;
     }
     const classicComm = new ClassicComm(id, comm);
+    if (this.models.has(id)) {
+      // This model has already been created, skip calling handle_com_open which
+      // would re-create it.
+      return;
+    }
     await this.handle_comm_open(classicComm, {
       header: {} as services.KernelMessage.IHeader<'comm_open'>,
       metadata: {version: base.PROTOCOL_VERSION},
