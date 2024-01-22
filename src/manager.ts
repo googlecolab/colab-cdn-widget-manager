@@ -92,7 +92,7 @@ export class Manager extends ManagerBase implements IWidgetManager {
         // The ES6 classes cannot be subclassed via Backbone's extend that some
         // code uses, so if the export looks like a class use swizzle to make it
         // extensible.
-        if (value.prototype) {
+        if (isES6Class(value)) {
           value = swizzle(value);
         }
         module[key] = value;
@@ -107,7 +107,7 @@ export class Manager extends ManagerBase implements IWidgetManager {
         // The ES6 classes cannot be subclassed via Backbone's extend that some
         // code uses, so if the export looks like a class use swizzle to make it
         // extensible.
-        if (value.prototype) {
+        if (isES6Class(value)) {
           value = swizzle(value);
         }
         module[key] = value;
@@ -246,6 +246,10 @@ export class Manager extends ManagerBase implements IWidgetManager {
       },
     });
   }
+}
+
+function isES6Class(value: unknown): boolean {
+  return typeof value === 'function' && value.toString().startsWith('class ');
 }
 
 class ClassicComm implements IClassicComm {
