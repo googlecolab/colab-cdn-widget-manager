@@ -80,18 +80,16 @@ describe('widget manager', () => {
     expect(leaflet).toBeInstanceOf(HTMLDivElement);
   });
 
-  it('throws for invalid specs', async () => {
+  it('shows error widget for invalid specs', async () => {
     const provider = new FakeState({
       123: {
         state: {},
       },
     });
-    const oldHandler = window.onerror;
-    window.onerror = () => {};
     const manager = createWidgetManager(provider);
-    await expectAsync(manager.render('123', container)).toBeRejected();
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    window.onerror = oldHandler;
+    await manager.render('123', container);
+    const errorWidget = container.querySelector('.jupyter-widgets-error-widget');
+    expect(errorWidget).toBeInstanceOf(HTMLDivElement);
   });
 
   it('has proper lifecycle events', async () => {
